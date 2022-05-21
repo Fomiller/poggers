@@ -11,6 +11,7 @@ import (
 	// twitch "github.com/gempir/go-twitch-irc/v3"
 
 	"github.com/gempir/go-twitch-irc/v3"
+	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 )
 
@@ -34,15 +35,8 @@ var (
 )
 
 func main() {
-	// r := gin.Default()
-	// r.LoadHTMLFiles("./cmd/server/index.html")
-	// r.GET("/", homeHandler)
-	// r.GET("/ws", websocketHandler)
-
-	// r.Run(":8080")
-
+	chat := make(chan string)
 	client := twitch.NewAnonymousClient()
-
 	client.OnPrivateMessage(func(message twitch.PrivateMessage) {
 		// if strings.Contains(strings.ToLower(message.Message), "pog") {
 		// 	x := PogMessage{message.User.Name, message.Message, message.Time}
@@ -54,19 +48,44 @@ func main() {
 		// 	// client.Say(Channel, fmt.Sprintf("Pog has been said %v times", pogCount))
 		// }
 		fmt.Println(message.Message)
+		chat <- message.Message
 	})
 
-	client.Join("swolenesss")
+	r := gin.Default()
+	r.LoadHTMLFiles("./cmd/server/index.html")
+	r.GET("/", homeHandler)
+	r.GET("/twitch/:name", func(c *gin.Context) {
+		fmt.Printf("Channel: %s\n", c.Param("name"))
+		client.Join(c.Param("name"))
 
+		go connectClient(client)
+		c.JSON(200, gin.H{
+			"message": <-chat,
+		})
+	})
+	// r.GET("/ws", websocketHandler)
+
+	r.Run(":8080")
+
+	fmt.Println("hello world")
+
+	// client.Join("swolenesss")
+	// err := client.Connect()
+	// if err != nil {
+	// 	panic(err)
+	// }
+}
+
+func homeHandler(c *gin.Context) {
+	c.HTML(200, "index.html", nil)
+}
+
+func connectClient(client *twitch.Client) {
 	err := client.Connect()
 	if err != nil {
 		panic(err)
 	}
 }
-
-// func homeHandler(c *gin.Context) {
-// 	c.HTML(200, "index.html", nil)
-// }
 
 // func websocketHandler(c *gin.Context) {
 // 	client := twitch.NewAnonymousClient()
