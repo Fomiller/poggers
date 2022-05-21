@@ -35,7 +35,7 @@ var (
 )
 
 func main() {
-	chat := make(chan string)
+	chat := make(chan string, 10)
 
 	client := twitch.NewAnonymousClient()
 	client.OnPrivateMessage(func(message twitch.PrivateMessage) {
@@ -57,20 +57,25 @@ func main() {
 			msg := <-chat
 			t := 1
 			conn.WriteMessage(t, []byte(fmt.Sprintf("%s", msg)))
-			time.Sleep(time.Second)
 		}
 	})
 
 	r.GET("/twitch/:name", func(c *gin.Context) {
-		fmt.Printf("Channel: %s\n", c.Param("name"))
+		channel := c.Param("name")
+		fmt.Printf("Channel: %s\n", channel)
 
-		client.Join(c.Param("name"))
+		// v := reflect.ValueOf(*client)
+		// y := v.FieldByName("channel")
+		// fmt.Println(y.Interface())
+
+		client.Join(channel)
 		go connectClient(client)
 
 		c.HTML(200, "index.html", nil)
 
 	})
 
+	// start server
 	r.Run(":8080")
 }
 
@@ -85,6 +90,7 @@ func connectClient(client *twitch.Client) {
 	}
 }
 
+// I dont think this is needed anymore
 // func ReadChat(client *twitch.Client, conn *websocket.Conn) {
 // 	client.OnPrivateMessage(func(message twitch.PrivateMessage) {
 // 		if strings.Contains(strings.ToLower(message.Message), "pog") {
@@ -99,4 +105,17 @@ func connectClient(client *twitch.Client) {
 // 			conn.WriteMessage(t, []byte(fmt.Sprintf("sup %s", message.Message)))
 // 		}
 // 	})
+// }
+
+// func (c *twitch.Client) DepartAll(channel string) {
+// 	if c.connActive.get() {
+// 		c.send(fmt.Sprintf("PART #%s", channel))
+// 	}
+
+// 	c.channelsMtx.Lock()
+// 	delete(c.channels, channel)
+// 	c.channelUserlistMutex.Lock()
+// 	delete(c.channelUserlist, channel)
+// 	c.channelUserlistMutex.Unlock()
+// 	c.channelsMtx.Unlock()
 // }
