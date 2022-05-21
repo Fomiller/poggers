@@ -4,6 +4,7 @@ import (
 	// "fmt"
 	"log"
 	"os"
+
 	// "strings"
 	"time"
 
@@ -51,30 +52,31 @@ func init() {
 	}
 }
 
-// func CreateClient() {
-// 	BotAccessToken := os.Getenv("BOT_ACCESS_TOKEN") // password for bot account to write chat messages, need to create this programatically
-// 	BotUsername := os.Getenv("BOT_USERNAME")        // does not seem to matter
+func CreateClient() *twitch.Client {
+	BotAccessToken := os.Getenv("BOT_ACCESS_TOKEN") // password for bot account to write chat messages, need to create this programatically
+	BotUsername := os.Getenv("BOT_USERNAME")        // does not seem to matter
 
-// 	client := twitch.NewClient(BotUsername, BotAccessToken)
+	client := twitch.NewClient(BotUsername, BotAccessToken)
+	return client
 
-// 	// client.OnPrivateMessage(func(message twitch.PrivateMessage) {
-// 	// 	if strings.Contains(strings.ToLower(message.Message), "pog") {
-// 	// 		x := PogMessage{message.User.Name, message.Message, message.Time}
-// 	// 		pogList = append(pogList, x)
+	// client.OnPrivateMessage(func(message twitch.PrivateMessage) {
+	// 	if strings.Contains(strings.ToLower(message.Message), "pog") {
+	// 		x := PogMessage{message.User.Name, message.Message, message.Time}
+	// 		pogList = append(pogList, x)
 
-// 	// 		pogCount++
-// 	// 		fmt.Println(pogCount)
+	// 		pogCount++
+	// 		fmt.Println(pogCount)
 
-// 	// 		client.Say(Channel, fmt.Sprintf("Pog has been said %v times", pogCount))
-// 	// 	}
-// 	// })
+	// 		client.Say(Channel, fmt.Sprintf("Pog has been said %v times", pogCount))
+	// 	}
+	// })
 
-// 	// return client
+	// return client
 
-// 	// client.Join("swolenesss")
+	// client.Join("swolenesss")
 
-// 	// err = client.Connect()
-// 	// if err != nil {
-// 	// 	panic(err)
-// 	// }
-// }
+	// err = client.Connect()
+	// if err != nil {
+	// 	panic(err)
+	// }
+}
