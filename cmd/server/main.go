@@ -36,17 +36,9 @@ var (
 
 func main() {
 	chat := make(chan string)
+
 	client := twitch.NewAnonymousClient()
 	client.OnPrivateMessage(func(message twitch.PrivateMessage) {
-		// if strings.Contains(strings.ToLower(message.Message), "pog") {
-		// 	x := PogMessage{message.User.Name, message.Message, message.Time}
-		// 	// pogList = append(pogList, x)
-
-		// 	// pogCount++
-		// 	fmt.Println(x)
-
-		// 	// client.Say(Channel, fmt.Sprintf("Pog has been said %v times", pogCount))
-		// }
 		fmt.Println(message.Message)
 		chat <- message.Message
 	})
@@ -60,12 +52,8 @@ func main() {
 			fmt.Printf("Failed to set websocket upgrade: %+v", err)
 			return
 		}
-		// go ReadChat(c, conn)
+
 		for {
-			// 	break
-			// }
-			// if err != nil {
-			// print(t)
 			msg := <-chat
 			t := 1
 			conn.WriteMessage(t, []byte(fmt.Sprintf("%s", msg)))
@@ -81,40 +69,14 @@ func main() {
 
 		c.HTML(200, "index.html", nil)
 
-		// c.JSON(200, gin.H{
-		// 	"message": <-chat,
-		// })
-		// for {
-		// 	// if err != nil {
-		// 	// 	break
-		// 	// }
-		// 	// print(t)
-		// 	msg := <-chat
-		// 	t := 1
-		// 	conn.WriteMessage(t, []byte(fmt.Sprintf("%s", msg)))
-		// 	time.Sleep(time.Second)
-		// }
 	})
-	// r.GET("/ws", websocketHandler)
 
 	r.Run(":8080")
-
-	fmt.Println("hello world")
-
-	// client.Join("swolenesss")
-	// err := client.Connect()
-	// if err != nil {
-	// 	panic(err)
-	// }
 }
 
 func homeHandler(c *gin.Context) {
 	c.HTML(200, "index.html", nil)
 }
-
-// func homeHandler(c *gin.Context) {
-// 	c.HTML(200, "index.html", nil)
-// }
 
 func connectClient(client *twitch.Client) {
 	err := client.Connect()
@@ -122,37 +84,6 @@ func connectClient(client *twitch.Client) {
 		panic(err)
 	}
 }
-
-// func websocketHandler(c *gin.Context) {
-// 	client := twitch.NewAnonymousClient()
-
-// 	client.Join("swolenesss")
-
-// 	err := client.Connect()
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	wsHandler(c.Writer, c.Request, client)
-// }
-
-// func wsHandler(c *gin.Context) {
-// 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
-// 	if err != nil {
-// 		fmt.Printf("Failed to set websocket upgrade: %+v", err)
-// 		return
-// 	}
-// 	// go ReadChat(c, conn)
-// 	for {
-// 		// 	break
-// 		// }
-// 		// if err != nil {
-// 		// print(t)
-// 		msg := <-chat
-// 		t := 1
-// 		conn.WriteMessage(t, []byte(fmt.Sprintf("sup %s", msg)))
-// 		time.Sleep(time.Second)
-// 	}
-// }
 
 // func ReadChat(client *twitch.Client, conn *websocket.Conn) {
 // 	client.OnPrivateMessage(func(message twitch.PrivateMessage) {
