@@ -54,14 +54,46 @@ func main() {
 	r := gin.Default()
 	r.LoadHTMLFiles("./cmd/server/index.html")
 	r.GET("/", homeHandler)
+	r.GET("/ws", func(c *gin.Context) {
+		conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+		if err != nil {
+			fmt.Printf("Failed to set websocket upgrade: %+v", err)
+			return
+		}
+		// go ReadChat(c, conn)
+		for {
+			// 	break
+			// }
+			// if err != nil {
+			// print(t)
+			msg := <-chat
+			t := 1
+			conn.WriteMessage(t, []byte(fmt.Sprintf("%s", msg)))
+			time.Sleep(time.Second)
+		}
+	})
+
 	r.GET("/twitch/:name", func(c *gin.Context) {
 		fmt.Printf("Channel: %s\n", c.Param("name"))
-		client.Join(c.Param("name"))
 
+		client.Join(c.Param("name"))
 		go connectClient(client)
-		c.JSON(200, gin.H{
-			"message": <-chat,
-		})
+
+		c.HTML(200, "index.html", nil)
+
+		// c.JSON(200, gin.H{
+		// 	"message": <-chat,
+		// })
+		// for {
+		// 	// if err != nil {
+		// 	// 	break
+		// 	// }
+		// 	// print(t)
+		// 	msg := <-chat
+		// 	t := 1
+		// 	conn.WriteMessage(t, []byte(fmt.Sprintf("%s", msg)))
+		// 	time.Sleep(time.Second)
+		// }
 	})
 	// r.GET("/ws", websocketHandler)
 
@@ -79,6 +111,10 @@ func main() {
 func homeHandler(c *gin.Context) {
 	c.HTML(200, "index.html", nil)
 }
+
+// func homeHandler(c *gin.Context) {
+// 	c.HTML(200, "index.html", nil)
+// }
 
 func connectClient(client *twitch.Client) {
 	err := client.Connect()
@@ -99,24 +135,23 @@ func connectClient(client *twitch.Client) {
 // 	wsHandler(c.Writer, c.Request, client)
 // }
 
-// func wsHandler(w http.ResponseWriter, r *http.Request, c *twitch.Client) {
-// 	conn, err := upgrader.Upgrade(w, r, nil)
+// func wsHandler(c *gin.Context) {
+// 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 // 	if err != nil {
 // 		fmt.Printf("Failed to set websocket upgrade: %+v", err)
 // 		return
 // 	}
-// 	fmt.Println(r.URL.RequestURI())
-// 	go ReadChat(c, conn)
-// for {
-// 	// if err != nil {
-// 	// 	break
-// 	// }
-// 	// print(t)
-// 	msg := "hello"
-// 	t := 1
-// 	conn.WriteMessage(t, []byte(fmt.Sprintf("sup %s", msg)))
-// 	time.Sleep(time.Second)
-// }
+// 	// go ReadChat(c, conn)
+// 	for {
+// 		// 	break
+// 		// }
+// 		// if err != nil {
+// 		// print(t)
+// 		msg := <-chat
+// 		t := 1
+// 		conn.WriteMessage(t, []byte(fmt.Sprintf("sup %s", msg)))
+// 		time.Sleep(time.Second)
+// 	}
 // }
 
 // func ReadChat(client *twitch.Client, conn *websocket.Conn) {
