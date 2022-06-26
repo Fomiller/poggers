@@ -35,13 +35,9 @@ var (
 )
 
 func main() {
-	chat := make(chan string, 10)
+	chat := make(chan string, 100)
 
 	client := twitch.NewAnonymousClient()
-	client.OnPrivateMessage(func(message twitch.PrivateMessage) {
-		fmt.Println(message.Message)
-		chat <- message.Message
-	})
 
 	r := gin.Default()
 	r.LoadHTMLFiles("./cmd/server/index.html")
@@ -67,10 +63,15 @@ func main() {
 		// v := reflect.ValueOf(*client)
 		// y := v.FieldByName("channel")
 		// fmt.Println(y.Interface())
+		client.OnPrivateMessage(func(message twitch.PrivateMessage) {
+			if message.Channel == channel {
+				fmt.Printf("%v %v - %v\n", message.Time, message.Channel, message.Message)
+				chat <- fmt.Sprintf("%v:%v - %v", message.Channel, message.User.DisplayName, message.Message)
+			}
+		})
 
 		client.Join(channel)
 		go connectClient(client)
-
 		c.HTML(200, "index.html", nil)
 
 	})
