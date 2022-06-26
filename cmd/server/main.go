@@ -4,8 +4,8 @@ import (
 
 	// "log"
 
-	// "strings"
 	"fmt"
+	"strings"
 	"time"
 
 	// twitch "github.com/gempir/go-twitch-irc/v3"
@@ -56,13 +56,10 @@ func main() {
 		}
 	})
 
-	r.GET("/twitch/:name", func(c *gin.Context) {
+	r.GET("/api/:name", func(c *gin.Context) {
 		channel := c.Param("name")
 		fmt.Printf("Channel: %s\n", channel)
 
-		// v := reflect.ValueOf(*client)
-		// y := v.FieldByName("channel")
-		// fmt.Println(y.Interface())
 		client.OnPrivateMessage(func(message twitch.PrivateMessage) {
 			if message.Channel == channel {
 				fmt.Printf("%v %v - %v\n", message.Time, message.Channel, message.Message)
@@ -70,7 +67,27 @@ func main() {
 			}
 		})
 
+		//TODO: add logic to check if client is already connected to a channel if it is skip connection
 		client.Join(channel)
+		go connectClient(client)
+		c.HTML(200, "index.html", nil)
+
+	})
+
+	r.GET("/api/:name/:emote", func(c *gin.Context) {
+		channel := c.Param("name")
+		emote := c.Param("emote")
+		fmt.Printf("Channel: %s\n", channel)
+		fmt.Printf("Emote: %s\n", emote)
+
+		client.OnPrivateMessage(func(message twitch.PrivateMessage) {
+			if message.Channel == channel && strings.Contains(message.Message, emote) {
+				fmt.Printf("%v %v - %v\n", message.Time, message.Channel, message.Message)
+				chat <- fmt.Sprintf("%v:%v - %v", message.Channel, message.User.DisplayName, message.Message)
+			}
+		})
+
+		//TODO: add logic to check if client is already connected to a channel if it is skip connection
 		go connectClient(client)
 		c.HTML(200, "index.html", nil)
 
