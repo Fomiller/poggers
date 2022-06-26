@@ -24,4 +24,3 @@
 **/env.list
 **/*.env.list
 **/*.env*
-**/*env*
