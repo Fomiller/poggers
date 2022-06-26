@@ -24,4 +24,7 @@
 **/env.list
 **/*.env.list
 **/*.env*
-**/*env*
+
+#terraform
+**/.terraform/
+**/.terragrunt-cache/
