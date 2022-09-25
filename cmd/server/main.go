@@ -16,17 +16,37 @@ import (
 )
 
 type PogMessage struct {
-	User    string
-	Message string
-	Time    time.Time
+	User    string    `json:"user"`
+	Message string    `json:"message"`
+	Time    time.Time `json:"time"`
+}
+
+type EmoteCount struct {
+	name   string
+	Emotes []twitch.PrivateMessage
+	count  int
+}
+
+func (e *EmoteCount) getEmoteCount() int {
+	for i, emote := range e.Emotes {
+		if time.Now().Sub(emote.Time).Seconds() > 60 {
+			e.Emotes = append(e.Emotes[:i], e.Emotes[i+1:]...)
+		}
+	}
+	return len(e.Emotes)
+}
+
+func (e *EmoteCount) addEmote(message twitch.PrivateMessage) []twitch.PrivateMessage {
+	e.Emotes = append(e.Emotes, message)
+	return e.Emotes
 }
 
 var (
-	Channel  string = "swolenesss" // channel that messages will be written to
-	PogCount *int
-
-	pogCount int
-	pogList  = []PogMessage{}
+	Channel     string = "swolenesss" // channel that messages will be written to
+	channelList        = []string{}
+	pogList            = []PogMessage{}
+	PogCount    *int
+	pogCount    int
 
 	upgrader = websocket.Upgrader{
 		ReadBufferSize:  1024,
@@ -36,8 +56,10 @@ var (
 
 func main() {
 	chat := make(chan string, 100)
+	// signal := make(chan int, 1)
 
 	client := twitch.NewAnonymousClient()
+	go connectClient(client)
 
 	r := gin.Default()
 	r.LoadHTMLFiles("./cmd/server/index.html")
@@ -53,6 +75,14 @@ func main() {
 			msg := <-chat
 			t := 1
 			conn.WriteMessage(t, []byte(fmt.Sprintf("%s", msg)))
+			// _, signalMsg, err := conn.ReadMessage()
+			// if err != nil {
+			// 	fmt.Println(err)
+			// }
+			// if string(signalMsg) == "CLOSE" {
+			// 	fmt.Println(string(signalMsg))
+			// 	signal <- 1
+			// }
 		}
 	})
 
@@ -60,37 +90,51 @@ func main() {
 		channel := c.Param("name")
 		fmt.Printf("Channel: %s\n", channel)
 
+		joinChannel(channel, client)
+
 		client.OnPrivateMessage(func(message twitch.PrivateMessage) {
 			if message.Channel == channel {
-				fmt.Printf("%v %v - %v\n", message.Time, message.Channel, message.Message)
+				// fmt.Printf("%v %v - %v\n", message.Time, message.Channel, message.Message)
 				chat <- fmt.Sprintf("%v:%v - %v", message.Channel, message.User.DisplayName, message.Message)
 			}
 		})
 
-		//TODO: add logic to check if client is already connected to a channel if it is skip connection
-		client.Join(channel)
-		go connectClient(client)
 		c.HTML(200, "index.html", nil)
-
 	})
 
 	r.GET("/api/:name/:emote", func(c *gin.Context) {
 		channel := c.Param("name")
 		emote := c.Param("emote")
+		emoteCount := EmoteCount{name: emote}
 		fmt.Printf("Channel: %s\n", channel)
 		fmt.Printf("Emote: %s\n", emote)
 
+		joinChannel(channel, client)
+
 		client.OnPrivateMessage(func(message twitch.PrivateMessage) {
 			if message.Channel == channel && strings.Contains(message.Message, emote) {
-				fmt.Printf("%v %v - %v\n", message.Time, message.Channel, message.Message)
-				chat <- fmt.Sprintf("%v:%v - %v", message.Channel, message.User.DisplayName, message.Message)
+				emoteCount.addEmote(message)
+
+				// fmt.Printf("%v %v - %v\n", message.Time, message.Channel, message.Message)
+				// chat <- fmt.Sprintf("%v:%v - %v", message.Channel, message.User.DisplayName, message.Message)
 			}
 		})
 
-		//TODO: add logic to check if client is already connected to a channel if it is skip connection
-		go connectClient(client)
-		c.HTML(200, "index.html", nil)
+		go func() {
+			for {
+				// select {
+				// case <-signal:
+				// 	fmt.Println("returning")
+				// 	return
+				// default:
+				time.Sleep(500 * time.Millisecond)
+				fmt.Printf("%v : %v\n", emoteCount.name, emoteCount.getEmoteCount())
+				chat <- fmt.Sprintf("%v : %v", emoteCount.name, emoteCount.getEmoteCount())
+				// }
+			}
+		}()
 
+		c.HTML(200, "index.html", nil)
 	})
 
 	// start server
@@ -105,6 +149,24 @@ func connectClient(client *twitch.Client) {
 	err := client.Connect()
 	if err != nil {
 		panic(err)
+	}
+}
+
+func contains(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
+}
+
+func joinChannel(channel string, client *twitch.Client) {
+	if contains(channel, channelList) != true {
+		client.Join(channel)
+		fmt.Println("Channel joined")
+	} else {
+		fmt.Println("Channel already joined")
 	}
 }
 

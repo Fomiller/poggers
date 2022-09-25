@@ -12,10 +12,15 @@
     url = 'ws://localhost:8080/ws'
     c = new WebSocket(url);
 
+
     send = function (data) {
       $("#output").append((new Date()) + " <== " + data + "\n")
       c.send(data)
     }
+
+    window.addEventListener('beforeunload', function (e) {
+      c.send("CLOSE")
+    });
 
     c.onmessage = function (msg) {
       $("#output").append((new Date()) + " ==> " + msg.data + "\n")
