@@ -18,10 +18,6 @@
       c.send(data)
     }
 
-    window.addEventListener('beforeunload', function (e) {
-      c.send("CLOSE")
-    });
-
     c.onmessage = function (msg) {
       $("#output").append((new Date()) + " ==> " + msg.data + "\n")
       console.log(msg)

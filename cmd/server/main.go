@@ -56,12 +56,19 @@ var (
 
 func main() {
 	chat := make(chan string, 100)
-	// signal := make(chan int, 1)
 
 	client := twitch.NewAnonymousClient()
 	go connectClient(client)
 
 	r := gin.Default()
+
+	// use this to serve vue app
+	// r.Use(static.Serve("/", static.LocalFile("./frontend/dist", false)))
+	// r.NoRoute(func(c *gin.Context) {
+	// 	c.File("./frontend/dist/index.html")
+	// })
+
+	// use this to serve websocket
 	r.LoadHTMLFiles("./cmd/server/index.html")
 	r.GET("/", homeHandler)
 	r.GET("/ws", func(c *gin.Context) {
@@ -71,19 +78,28 @@ func main() {
 			return
 		}
 
-		for {
-			msg := <-chat
-			t := 1
-			conn.WriteMessage(t, []byte(fmt.Sprintf("%s", msg)))
-			// _, signalMsg, err := conn.ReadMessage()
-			// if err != nil {
-			// 	fmt.Println(err)
-			// }
-			// if string(signalMsg) == "CLOSE" {
-			// 	fmt.Println(string(signalMsg))
-			// 	signal <- 1
-			// }
-		}
+		// write messages
+		go func() {
+			for {
+				msg := <-chat
+				t := 1
+				conn.WriteMessage(t, []byte(fmt.Sprintf("%s", msg)))
+			}
+		}()
+
+		// signal := make(chan int, 1)
+		//read messages
+		// go func() {
+		// 	_, signalMsg, err := conn.ReadMessage()
+		// 	if err != nil {
+		// 		fmt.Println("error", err)
+		// 		conn.Close()
+		// 		signal <- 1
+		// 	}
+		// 	if string(signalMsg) == "CLOSE" {
+		// 		signal <- 1
+		// 	}
+		// }()
 	})
 
 	r.GET("/api/:name", func(c *gin.Context) {
@@ -103,6 +119,7 @@ func main() {
 	})
 
 	r.GET("/api/:name/:emote", func(c *gin.Context) {
+
 		channel := c.Param("name")
 		emote := c.Param("emote")
 		emoteCount := EmoteCount{name: emote}
@@ -114,23 +131,14 @@ func main() {
 		client.OnPrivateMessage(func(message twitch.PrivateMessage) {
 			if message.Channel == channel && strings.Contains(message.Message, emote) {
 				emoteCount.addEmote(message)
-
-				// fmt.Printf("%v %v - %v\n", message.Time, message.Channel, message.Message)
-				// chat <- fmt.Sprintf("%v:%v - %v", message.Channel, message.User.DisplayName, message.Message)
 			}
 		})
 
 		go func() {
 			for {
-				// select {
-				// case <-signal:
-				// 	fmt.Println("returning")
-				// 	return
-				// default:
 				time.Sleep(500 * time.Millisecond)
 				fmt.Printf("%v : %v\n", emoteCount.name, emoteCount.getEmoteCount())
 				chat <- fmt.Sprintf("%v : %v", emoteCount.name, emoteCount.getEmoteCount())
-				// }
 			}
 		}()
 
