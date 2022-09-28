@@ -1,16 +1,22 @@
 {
   "name": "frontend",
-  "version": "0.0.0",
+  "version": "0.0.1",
+  "private": true,
   "scripts": {
-    "dev": "vite",
+    "dev": "vite dev",
     "build": "vite build",
-    "preview": "vite preview --port 4173"
-  },
-  "dependencies": {
-    "vue": "^3.2.38"
+    "preview": "vite preview",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json",
+    "check:watch": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json --watch"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^3.0.3",
-    "vite": "^3.0.9"
-  }
+    "@sveltejs/adapter-auto": "next",
+    "@sveltejs/adapter-static": "next",
+    "@sveltejs/kit": "next",
+    "svelte": "^3.44.0",
+    "svelte-check": "^2.7.1",
+    "typescript": "^4.7.4",
+    "vite": "^3.1.0"
+  },
+  "type": "module"
 }

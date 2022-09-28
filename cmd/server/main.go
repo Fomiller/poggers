@@ -11,6 +11,7 @@ import (
 	// twitch "github.com/gempir/go-twitch-irc/v3"
 
 	"github.com/gempir/go-twitch-irc/v3"
+	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 )
@@ -63,14 +64,14 @@ func main() {
 	r := gin.Default()
 
 	// use this to serve vue app
-	// r.Use(static.Serve("/", static.LocalFile("./frontend/dist", false)))
-	// r.NoRoute(func(c *gin.Context) {
-	// 	c.File("./frontend/dist/index.html")
-	// })
+	r.Use(static.Serve("/", static.LocalFile("./frontend/build", false)))
+	r.NoRoute(func(c *gin.Context) {
+		c.File("./frontend/build/index.html")
+	})
 
 	// use this to serve websocket
-	r.LoadHTMLFiles("./cmd/server/index.html")
-	r.GET("/", homeHandler)
+	// r.LoadHTMLFiles("./cmd/server/index.html")
+	// r.GET("/", homeHandler)
 	r.GET("/ws", func(c *gin.Context) {
 		conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 		if err != nil {
